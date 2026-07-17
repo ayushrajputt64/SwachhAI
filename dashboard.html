@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwachhAI — Patna Waste Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <h1>🌱 SwachhAI</h1>
+            <p>Patna Municipal Corporation — Real-Time Waste Intelligence Dashboard</p>
+        </div>
+        <div class="header-right">
+            <a href="index.html" class="nav-btn">📷 Live Scanner</a>
+        </div>
+    </div>
+
+    <div class="sim-banner">
+        🟡 SwachhAI Simulation Dashboard — Data based on Patna Municipal Corporation official records, NEERI study & PMC 2024-25 budget reports.
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-row">
+        <div class="kpi-card">
+            <div class="kpi-icon">🗑️</div>
+            <div class="kpi-num">950</div>
+            <div class="kpi-label">Tonnes Waste/Day (PMC Data)</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon">⚠️</div>
+            <div class="kpi-num">350</div>
+            <div class="kpi-label">Tonnes Uncollected Daily</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon">🚛</div>
+            <div class="kpi-num">557</div>
+            <div class="kpi-label">PMC Vehicles (Zero AI Routing)</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon">🏘️</div>
+            <div class="kpi-num">75</div>
+            <div class="kpi-label">Wards in Patna</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon">💰</div>
+            <div class="kpi-num">₹2054Cr</div>
+            <div class="kpi-label">PMC Budget 2024-25</div>
+        </div>
+        <div class="kpi-card kpi-green">
+            <div class="kpi-icon">🤖</div>
+            <div class="kpi-num">40%</div>
+            <div class="kpi-label">Cost Saved with SwachhAI</div>
+        </div>
+    </div>
+
+    <!-- Dashboard Grid -->
+    <div class="dashboard-grid">
+
+        <!-- Hotspot Map -->
+        <div class="dash-card map-card">
+            <div class="dash-card-header">
+                <h2>🗺️ Patna Waste Hotspot Map</h2>
+                <span class="live-badge">● SIMULATION</span>
+            </div>
+            <div style="background:#1a2744; border-radius:10px; padding:20px;">
+                <div style="color:#2ea043; font-size:1.1rem; font-weight:bold; margin-bottom:10px;">📍 PMC Circle — Waste Hotspot Intelligence</div>
+                <div style="color:#60a5fa; text-align:center; font-style:italic; margin-bottom:15px; font-size:0.9rem;">~ Ganga River (North Patna) ~</div>
+                <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px;">
+                    <div class="hotspot-card critical">
+                        <div class="hs-dot">🔴</div>
+                        <div class="hs-name">Boring Road</div>
+                        <div class="hs-circle">Bankipur Circle</div>
+                        <div class="hs-tpd critical-text">42 TPD</div>
+                        <div class="hs-priority critical-text">● CRITICAL</div>
+                    </div>
+                    <div class="hotspot-card critical">
+                        <div class="hs-dot">🔴</div>
+                        <div class="hs-name">Gardanibagh</div>
+                        <div class="hs-circle">Kankarbagh Circle</div>
+                        <div class="hs-tpd critical-text">38 TPD</div>
+                        <div class="hs-priority critical-text">● CRITICAL</div>
+                    </div>
+                    <div class="hotspot-card high">
+                        <div class="hs-dot">🟠</div>
+                        <div class="hs-name">Patna City</div>
+                        <div class="hs-circle">Patna City Circle</div>
+                        <div class="hs-tpd high-text">35 TPD</div>
+                        <div class="hs-priority high-text">● HIGH</div>
+                    </div>
+                    <div class="hotspot-card high">
+                        <div class="hs-dot">🟠</div>
+                        <div class="hs-name">Azimabad</div>
+                        <div class="hs-circle">Azimabad Circle</div>
+                        <div class="hs-tpd high-text">29 TPD</div>
+                        <div class="hs-priority high-text">● HIGH</div>
+                    </div>
+                    <div class="hotspot-card medium">
+                        <div class="hs-dot">🟡</div>
+                        <div class="hs-name">Rajendra Nagar</div>
+                        <div class="hs-circle">Patliputra Circle</div>
+                        <div class="hs-tpd medium-text">21 TPD</div>
+                        <div class="hs-priority medium-text">● MEDIUM</div>
+                    </div>
+                    <div class="hotspot-card medium">
+                        <div class="hs-dot">🟡</div>
+                        <div class="hs-name">New Capital</div>
+                        <div class="hs-circle">New Capital Circle</div>
+                        <div class="hs-tpd medium-text">18 TPD</div>
+                        <div class="hs-priority medium-text">● MEDIUM</div>
+                    </div>
+                    <div class="hotspot-card low">
+                        <div class="hs-dot">🟢</div>
+                        <div class="hs-name">Gandhi Maidan</div>
+                        <div class="hs-circle">Bankipur Circle</div>
+                        <div class="hs-tpd low-text">12 TPD</div>
+                        <div class="hs-priority low-text">● LOW</div>
+                    </div>
+                    <div class="hotspot-card low">
+                        <div class="hs-dot">🟢</div>
+                        <div class="hs-name">Patliputra Colony</div>
+                        <div class="hs-circle">Patliputra Circle</div>
+                        <div class="hs-tpd low-text">9 TPD</div>
+                        <div class="hs-priority low-text">● LOW</div>
+                    </div>
+                </div>
+                <div style="display:flex; gap:20px; margin-top:15px;">
+                    <span style="color:#ef4444; font-size:0.85rem;">🔴 Critical</span>
+                    <span style="color:#f97316; font-size:0.85rem;">🟠 High</span>
+                    <span style="color:#eab308; font-size:0.85rem;">🟡 Medium</span>
+                    <span style="color:#22c55e; font-size:0.85rem;">🟢 Low</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Composition Chart -->
+        <div class="dash-card">
+            <div class="dash-card-header">
+                <h2>📊 Patna Waste Composition</h2>
+                <span class="source-badge">Source: NEERI Study</span>
+            </div>
+            <div style="height:300px; display:flex; align-items:center; justify-content:center;">
+                <canvas id="compositionChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Hotspot Table -->
+        <div class="dash-card table-card">
+            <div class="dash-card-header">
+                <h2>📍 Waste Hotspot Priority List</h2>
+                <span class="source-badge">Based on PMC Circle Data</span>
+            </div>
+            <table class="waste-table">
+                <thead>
+                    <tr>
+                        <th>Location</th>
+                        <th>Circle</th>
+                        <th>Waste (TPD)</th>
+                        <th>Type</th>
+                        <th>Priority</th>
+                        <th>Last Cleaned</th>
+                    </tr>
+                </thead>
+                <tbody id="hotspotTable"></tbody>
+            </table>
+        </div>
+
+        <!-- Trend Chart -->
+        <div class="dash-card">
+            <div class="dash-card-header">
+                <h2>📈 Weekly Waste Generation Trend</h2>
+                <span class="source-badge">Patna — Projected Data</span>
+            </div>
+            <div style="height:300px; display:flex; align-items:center; justify-content:center;">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Impact -->
+        <div class="dash-card impact-card">
+            <div class="dash-card-header">
+                <h2>🌍 SwachhAI Projected Impact on Patna</h2>
+            </div>
+            <div class="impact-grid">
+                <div class="impact-item">
+                    <div class="impact-icon">💨</div>
+                    <div class="impact-val">2-3 Tonnes</div>
+                    <div class="impact-desc">CO₂ saved per vehicle per year</div>
+                </div>
+                <div class="impact-item">
+                    <div class="impact-icon">💰</div>
+                    <div class="impact-val">40-50%</div>
+                    <div class="impact-desc">Reduction in cleaning budget</div>
+                </div>
+                <div class="impact-item">
+                    <div class="impact-icon">🚛</div>
+                    <div class="impact-val">350 TPD</div>
+                    <div class="impact-desc">Currently uncollected waste targeted</div>
+                </div>
+                <div class="impact-item">
+                    <div class="impact-icon">🌊</div>
+                    <div class="impact-val">17.57 Lakh</div>
+                    <div class="impact-desc">People affected by Bihar floods 2024</div>
+                </div>
+                <div class="impact-item">
+                    <div class="impact-icon">🏙️</div>
+                    <div class="impact-val">75 Wards</div>
+                    <div class="impact-desc">Full Patna coverage planned</div>
+                </div>
+                <div class="impact-item">
+                    <div class="impact-icon">♻️</div>
+                    <div class="impact-val">47.4%</div>
+                    <div class="impact-desc">Biodegradable waste — compostable</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Route -->
+        <div class="dash-card">
+            <div class="dash-card-header">
+                <h2>🛣️ AI Route Optimization</h2>
+                <span class="live-badge">● SIMULATION</span>
+            </div>
+            <p style="color:#8b949e; font-size:0.88rem; margin-bottom:15px;">SwachhAI optimizes cleaning routes based on real-time waste density.</p>
+            <div class="route-stats">
+                <div class="route-stat">
+                    <span class="route-val">6</span>
+                    <span class="route-desc">PMC Circles</span>
+                </div>
+                <div class="route-stat">
+                    <span class="route-val">23 km</span>
+                    <span class="route-desc">Optimal Route</span>
+                </div>
+                <div class="route-stat">
+                    <span class="route-val">8hrs</span>
+                    <span class="route-desc">Est. Completion</span>
+                </div>
+                <div class="route-stat">
+                    <span class="route-val">₹1,240</span>
+                    <span class="route-desc">Fuel Saved</span>
+                </div>
+            </div>
+            <div style="background:#0d1117; border-radius:10px; padding:15px; margin-top:15px;">
+                <div style="color:#2ea043; font-weight:bold; margin-bottom:12px;">🛣️ AI Optimized Cleaning Route — Today</div>
+                <div style="display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
+                    <div class="route-stop">📍 Stop 1: Boring Road</div>
+                    <div style="color:#2ea043">→</div>
+                    <div class="route-stop">📍 Stop 2: Gardanibagh</div>
+                    <div style="color:#2ea043">→</div>
+                    <div class="route-stop">📍 Stop 3: Patna City</div>
+                    <div style="color:#2ea043">→</div>
+                    <div class="route-stop">📍 Stop 4: Azimabad</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Architecture -->
+        <div class="dash-card arch-card">
+            <div class="dash-card-header">
+                <h2>⚙️ SwachhAI System Architecture</h2>
+                <span class="source-badge">Hardware Integration Roadmap</span>
+            </div>
+            <div class="arch-container">
+                <div class="arch-phase">
+                    <div class="phase-label phase-done">✅ Phase 1 — Complete</div>
+                    <div class="arch-row">
+                        <div class="arch-box box-green">
+                            <div class="arch-icon">🧠</div>
+                            <div class="arch-title">SwachhAI Brain</div>
+                            <div class="arch-desc">AI waste detection & classification</div>
+                            <div class="arch-status status-done">WORKING</div>
+                        </div>
+                        <div class="arch-arrow">→</div>
+                        <div class="arch-box box-green">
+                            <div class="arch-icon">📊</div>
+                            <div class="arch-title">Smart Dashboard</div>
+                            <div class="arch-desc">Real-time Patna waste intelligence</div>
+                            <div class="arch-status status-done">WORKING</div>
+                        </div>
+                        <div class="arch-arrow">→</div>
+                        <div class="arch-box box-green">
+                            <div class="arch-icon">📍</div>
+                            <div class="arch-title">GPS Mapping</div>
+                            <div class="arch-desc">Live hotspot tagging & route optimization</div>
+                            <div class="arch-status status-done">WORKING</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="arch-down">↓</div>
+                <div class="arch-phase">
+                    <div class="phase-label phase-next">🔄 Phase 2 — Hardware Integration</div>
+                    <div class="arch-row">
+                        <div class="arch-box box-blue">
+                            <div class="arch-icon">☀️</div>
+                            <div class="arch-title">Solar Panel</div>
+                            <div class="arch-desc">800W monocrystalline + MPPT controller</div>
+                            <div class="arch-status status-next">PLANNED</div>
+                        </div>
+                        <div class="arch-arrow">→</div>
+                        <div class="arch-box box-blue">
+                            <div class="arch-icon">🔋</div>
+                            <div class="arch-title">LiFePO₄ Battery</div>
+                            <div class="arch-desc">48V 120Ah battery pack with BMS</div>
+                            <div class="arch-status status-next">PLANNED</div>
+                        </div>
+                        <div class="arch-arrow">→</div>
+                        <div class="arch-box box-blue">
+                            <div class="arch-icon">🤖</div>
+                            <div class="arch-title">Arduino Mega</div>
+                            <div class="arch-desc">Central controller via PWM signals</div>
+                            <div class="arch-status status-next">PLANNED</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="arch-down">↓</div>
+                <div class="arch-phase">
+                    <div class="phase-label phase-future">🚀 Phase 3 — Full Vehicle</div>
+                    <div class="arch-row">
+                        <div class="arch-box box-orange">
+                            <div class="arch-icon">🚗</div>
+                            <div class="arch-title">BLDC Motors</div>
+                            <div class="arch-desc">2kW brushless motors for movement</div>
+                            <div class="arch-status status-future">PHASE 3</div>
+                        </div>
+                        <div class="arch-arrow">→</div>
+                        <div class="arch-box box-orange">
+                            <div class="arch-icon">🌀</div>
+                            <div class="arch-title">Vacuum System</div>
+                            <div class="arch-desc">Industrial suction + 500L waste bin</div>
+                            <div class="arch-status status-future">PHASE 3</div>
+                        </div>
+                        <div class="arch-arrow">→</div>
+                        <div class="arch-box box-orange">
+                            <div class="arch-icon">🏙️</div>
+                            <div class="arch-title">Patna Deployment</div>
+                            <div class="arch-desc">Full coverage — 75 wards, 6 circles</div>
+                            <div class="arch-status status-future">PHASE 3</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="data-flow">
+                    <div class="flow-title">🔄 Real-Time Data Flow</div>
+                    <div class="flow-row">
+                        <div class="flow-step">📷 Camera detects waste</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">🧠 AI classifies type</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">📍 GPS tags location</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">📊 Dashboard updates</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">🚗 Vehicle dispatched</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">🌀 Area cleaned</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="footer">
+        <p>SwachhAI by Team Eco Visionaries — Samsung Solve for Tomorrow 2026 | Data Sources: PMC Official Records, NEERI Study, Bihar Flood Reports 2024, Clean India Journal 2024</p>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>

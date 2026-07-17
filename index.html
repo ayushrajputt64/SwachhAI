@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwachhAI — Waste Detection</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <h1>🌱 SwachhAI</h1>
+            <p>Intelligent Solar Cleaning System for Smart Cities</p>
+        </div>
+        <div class="header-right">
+            <a href="dashboard.html" class="nav-btn">📊 View Dashboard</a>
+        </div>
+    </div>
+
+    <!-- Simulation Banner -->
+    <div class="sim-banner">
+        🟡 SwachhAI Prototype Mode — AI model trained on waste image dataset. 
+        Real deployment will use vehicle-mounted cameras across Patna's 75 wards.
+    </div>
+
+    <!-- Main -->
+    <div class="container">
+
+        <!-- Left: Camera -->
+        <div class="card">
+            <h2>📷 Live Waste Scanner</h2>
+            <p class="subtitle">Point camera at any waste item</p>
+            <div id="webcam-container"></div>
+            <div class="btn-group">
+                <button onclick="init()" id="startBtn" class="btn-green">
+                    ▶ Start Scanner
+                </button>
+                <button onclick="stopScanner()" id="stopBtn" class="btn-red" disabled>
+                    ⏹ Stop
+                </button>
+            </div>
+            <div class="status-bar">
+                <span id="statusText">⏳ Click Start Scanner to begin</span>
+            </div>
+        </div>
+
+        <!-- Right: Results -->
+        <div class="right-panel">
+
+            <!-- Detection Result -->
+            <div class="card result-card">
+                <h2>🧠 AI Detection Result</h2>
+                <div class="main-result">
+                    <div class="waste-icon" id="wasteIcon">🔍</div>
+                    <div class="waste-type" id="wasteType">Waiting...</div>
+                    <div class="confidence" id="confidence"></div>
+                </div>
+            </div>
+
+            <!-- Confidence Bars -->
+            <div class="card">
+                <h2>📊 Detection Confidence</h2>
+                <div id="label-container"></div>
+            </div>
+
+            <!-- Disposal Tip -->
+            <div class="card tip-card">
+                <h2>💡 Disposal Guidance</h2>
+                <p id="tipText">Start scanner to get real-time disposal advice</p>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+        <div class="stat">
+            <span class="stat-num" id="totalScans">0</span>
+            <span class="stat-label">Total Detections</span>
+        </div>
+        <div class="stat">
+            <span class="stat-num" id="plasticCount">0</span>
+            <span class="stat-label">🧴 Plastic</span>
+        </div>
+        <div class="stat">
+            <span class="stat-num" id="organicCount">0</span>
+            <span class="stat-label">🍃 Organic</span>
+        </div>
+        <div class="stat">
+            <span class="stat-num" id="paperCount">0</span>
+            <span class="stat-label">📄 Paper</span>
+        </div>
+        <div class="stat">
+            <span class="stat-num" id="metalCount">0</span>
+            <span class="stat-label">🔩 Metal</span>
+        </div>
+        <div class="stat">
+            <span class="stat-num" id="gpsCoord">--</span>
+            <span class="stat-label">📍 GPS Active</span>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>SwachhAI by Team Eco Visionaries — Samsung Solve for Tomorrow 2026 | 
+        Patna Municipal Corporation — 950 TPD Waste Challenge</p>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
