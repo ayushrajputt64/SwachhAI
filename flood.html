@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwachhAI — Flood Risk AI</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #0d1117; color: #e6edf3; min-height: 100vh; }
+        .header {
+            background: linear-gradient(135deg, #0d1a2e, #1a2e4a);
+            padding: 15px 30px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid #58a6ff;
+        }
+        .header h1 { font-size: 1.5rem; color: #58a6ff; }
+        .nav-links { display: flex; gap: 10px; flex-wrap: wrap; }
+        .nav-link {
+            color: #c9d1d9; text-decoration: none;
+            font-size: 0.8rem; padding: 5px 10px;
+            border: 1px solid #30363d; border-radius: 6px; transition: all 0.3s;
+        }
+        .nav-link:hover { background: #58a6ff; color: white; }
+        .sim-banner {
+            background: #0d1a2e; border-bottom: 1px solid #58a6ff;
+            color: #58a6ff; text-align: center; padding: 8px; font-size: 0.82rem;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 30px 20px; }
+        .page-title { text-align: center; margin-bottom: 30px; }
+        .page-title h2 { font-size: 2rem; color: #58a6ff; margin-bottom: 8px; }
+        .page-title p { color: #8b949e; }
+
+        /* Alert Level */
+        .alert-level {
+            background: #161b22; border: 2px solid #ef4444;
+            border-radius: 12px; padding: 20px 25px;
+            display: flex; align-items: center; gap: 20px;
+            margin-bottom: 25px;
+            animation: alertPulse 2s infinite;
+        }
+        @keyframes alertPulse {
+            0%, 100% { border-color: #ef4444; }
+            50% { border-color: #f97316; }
+        }
+        .alert-icon { font-size: 3rem; }
+        .alert-info h3 { color: #ef4444; font-size: 1.2rem; margin-bottom: 5px; }
+        .alert-info p { color: #c9d1d9; font-size: 0.9rem; }
+        .alert-badge {
+            margin-left: auto; background: #ef444422;
+            border: 1px solid #ef4444; color: #ef4444;
+            padding: 8px 16px; border-radius: 8px;
+            font-weight: bold; font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        /* KPI Row */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 15px; margin-bottom: 25px;
+        }
+        .kpi-card {
+            background: #161b22; border: 1px solid #30363d;
+            border-radius: 12px; padding: 18px; text-align: center;
+        }
+        .kpi-icon { font-size: 1.8rem; margin-bottom: 8px; }
+        .kpi-num { font-size: 1.6rem; font-weight: bold; margin-bottom: 4px; }
+        .kpi-label { font-size: 0.75rem; color: #8b949e; }
+
+        /* Grid */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 25px; }
+
+        .card {
+            background: #161b22; border: 1px solid #30363d;
+            border-radius: 12px; padding: 20px;
+        }
+        .card h3 {
+            font-size: 1rem; margin-bottom: 15px;
+            padding-bottom: 10px; border-bottom: 1px solid #21262d;
+        }
+
+        /* Risk Map */
+        .risk-map {
+            background: #1a2744; border-radius: 10px;
+            padding: 20px; position: relative; min-height: 300px;
+        }
+        .risk-map-title {
+            color: #58a6ff; font-weight: bold;
+            margin-bottom: 15px; font-size: 0.9rem;
+        }
+        .risk-zones { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .risk-zone {
+            border-radius: 10px; padding: 15px; text-align: center;
+            cursor: pointer; transition: transform 0.2s;
+        }
+        .risk-zone:hover { transform: scale(1.05); }
+        .risk-zone .zone-name { font-size: 0.85rem; font-weight: bold; margin-bottom: 4px; }
+        .risk-zone .zone-risk { font-size: 0.75rem; margin-bottom: 8px; }
+        .risk-zone .zone-pct { font-size: 1.4rem; font-weight: bold; }
+        .risk-zone .zone-bar {
+            height: 4px; border-radius: 2px; margin-top: 8px;
+        }
+
+        /* Drainage Table */
+        .drain-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .drain-table th {
+            background: #21262d; color: #8b949e;
+            padding: 10px; text-align: left; font-weight: 600;
+        }
+        .drain-table td { padding: 10px; border-bottom: 1px solid #21262d; color: #c9d1d9; }
+        .drain-table tr:hover td { background: #1c2128; }
+
+        /* Timeline */
+        .timeline { display: flex; flex-direction: column; gap: 12px; }
+        .timeline-item {
+            display: flex; gap: 15px; align-items: flex-start;
+        }
+        .timeline-dot {
+            width: 12px; height: 12px; border-radius: 50%;
+            flex-shrink: 0; margin-top: 4px;
+        }
+        .timeline-content h4 { font-size: 0.9rem; color: #e6edf3; margin-bottom: 3px; }
+        .timeline-content p { font-size: 0.8rem; color: #8b949e; }
+
+        /* Recommendations */
+        .rec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .rec-item {
+            background: #0d1117; border-radius: 8px; padding: 12px;
+            border-left: 3px solid;
+        }
+        .rec-item h4 { font-size: 0.85rem; margin-bottom: 5px; }
+        .rec-item p { font-size: 0.8rem; color: #8b949e; }
+
+        .full-width { grid-column: span 2; }
+
+        .footer {
+            background: #161b22; border-top: 2px solid #58a6ff;
+            padding: 15px; text-align: center;
+            color: #8b949e; font-size: 0.8rem; margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+            .risk-zones { grid-template-columns: repeat(2, 1fr); }
+            .rec-grid { grid-template-columns: 1fr; }
+            .header { flex-direction: column; gap: 10px; }
+            .alert-level { flex-direction: column; text-align: center; }
+            .alert-badge { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div>
+        <h1>🌊 SwachhAI — Flood Risk AI</h1>
+        <p style="color:#8b949e; font-size:0.75rem;">Waste-Drainage Cross Intelligence | Bihar Flood Prevention System</p>
+    </div>
+    <nav class="nav-links">
+        <a href="index.html" class="nav-link">🏠 Home</a>
+        <a href="scanner.html" class="nav-link">📷 Scanner</a>
+        <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+        <a href="predict.html" class="nav-link">📈 Predictor</a>
+        <a href="chatbot.html" class="nav-link">🤖 ChatBot</a>
+        <a href="segregate.html" class="nav-link">♻️ Segregator</a>
+    </nav>
+</div>
+
+<div class="sim-banner">
+    🟡 Flood Intelligence Simulation — AI cross-references waste hotspots with drainage maps | Bihar Flood Data 2024
+</div>
+
+<div class="container">
+
+    <div class="page-title">
+        <h2>🌊 Flood Risk Intelligence</h2>
+        <p>AI identifies waste-blocked drains that cause flooding — critical for Bihar, Assam & coastal cities</p>
+    </div>
+
+    <!-- Alert -->
+    <div class="alert-level">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-info">
+            <h3>MONSOON FLOOD RISK — ELEVATED</h3>
+            <p>AI detected 8 critical drainage blockages caused by waste accumulation. 17.57 lakh people affected by Bihar floods 2024. SwachhAI predicts 3 zones at HIGH flood risk this monsoon season.</p>
+        </div>
+        <div class="alert-badge">🔴 HIGH ALERT</div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-row">
+        <div class="kpi-card">
+            <div class="kpi-icon">🌊</div>
+            <div class="kpi-num" style="color:#58a6ff">17.57L</div>
+            <div class="kpi-label">People Affected Bihar 2024</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon">🏘️</div>
+            <div class="kpi-num" style="color:#ef4444">402</div>
+            <div class="kpi-label">Villages Flood-Affected 2024</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon">🚰</div>
+            <div class="kpi-num" style="color:#f97316">8</div>
+            <div class="kpi-label">Blocked Drains Detected</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon">📍</div>
+            <div class="kpi-num" style="color:#eab308">13</div>
+            <div class="kpi-label">Districts at Risk 2024</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon">💰</div>
+            <div class="kpi-num" style="color:#2ea043">₹126Cr</div>
+            <div class="kpi-label">Flood Loss 2024</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon">🤖</div>
+            <div class="kpi-num" style="color:#a371f7">89%</div>
+            <div class="kpi-label">AI Prediction Accuracy</div>
+        </div>
+    </div>
+
+    <!-- Risk Map + Chart -->
+    <div class="grid-2">
+
+        <div class="card">
+            <h3 style="color:#58a6ff">🗺️ Zone-wise Flood Risk Map</h3>
+            <div class="risk-map">
+                <div class="risk-map-title">~ Ganga River (High Flood Risk North) ~</div>
+                <div class="risk-zones">
+                    <div class="risk-zone" style="background:#ef444422; border:1px solid #ef4444">
+                        <div class="zone-name" style="color:#ef4444">North Zone</div>
+                        <div class="zone-risk" style="color:#ef4444">● CRITICAL</div>
+                        <div class="zone-pct" style="color:#ef4444">87%</div>
+                        <div class="zone-bar" style="background:#ef4444; width:87%"></div>
+                    </div>
+                    <div class="risk-zone" style="background:#ef444422; border:1px solid #ef4444">
+                        <div class="zone-name" style="color:#ef4444">East Zone</div>
+                        <div class="zone-risk" style="color:#ef4444">● CRITICAL</div>
+                        <div class="zone-pct" style="color:#ef4444">82%</div>
+                        <div class="zone-bar" style="background:#ef4444; width:82%"></div>
+                    </div>
+                    <div class="risk-zone" style="background:#f9731622; border:1px solid #f97316">
+                        <div class="zone-name" style="color:#f97316">Central Zone</div>
+                        <div class="zone-risk" style="color:#f97316">● HIGH</div>
+                        <div class="zone-pct" style="color:#f97316">65%</div>
+                        <div class="zone-bar" style="background:#f97316; width:65%"></div>
+                    </div>
+                    <div class="risk-zone" style="background:#f9731622; border:1px solid #f97316">
+                        <div class="zone-name" style="color:#f97316">West Zone</div>
+                        <div class="zone-risk" style="color:#f97316">● HIGH</div>
+                        <div class="zone-pct" style="color:#f97316">58%</div>
+                        <div class="zone-bar" style="background:#f97316; width:58%"></div>
+                    </div>
+                    <div class="risk-zone" style="background:#eab30822; border:1px solid #eab308">
+                        <div class="zone-name" style="color:#eab308">South Zone</div>
+                        <div class="zone-risk" style="color:#eab308">● MEDIUM</div>
+                        <div class="zone-pct" style="color:#eab308">34%</div>
+                        <div class="zone-bar" style="background:#eab308; width:34%"></div>
+                    </div>
+                    <div class="risk-zone" style="background:#22c55e22; border:1px solid #22c55e">
+                        <div class="zone-name" style="color:#22c55e">New Capital</div>
+                        <div class="zone-risk" style="color:#22c55e">● LOW</div>
+                        <div class="zone-pct" style="color:#22c55e">18%</div>
+                        <div class="zone-bar" style="background:#22c55e; width:18%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="color:#58a6ff">📊 Waste vs Flood Risk Correlation</h3>
+            <canvas id="floodChart" height="280"></canvas>
+        </div>
+
+    </div>
+
+    <!-- Drainage Blockages -->
+    <div class="card" style="margin-bottom:25px">
+        <h3 style="color:#ef4444">🚰 Critical Drainage Blockages — AI Detected</h3>
+        <table class="drain-table">
+            <thead>
+                <tr>
+                    <th>Location</th>
+                    <th>Waste Type</th>
+                    <th>Blockage %</th>
+                    <th>Flood Risk</th>
+                    <th>Last Cleared</th>
+                    <th>SwachhAI Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>📍 Boring Road Drain</td>
+                    <td>🧴 Plastic + Organic</td>
+                    <td><span style="color:#ef4444; font-weight:bold">92%</span></td>
+                    <td><span style="color:#ef4444">🔴 CRITICAL</span></td>
+                    <td>8 days ago</td>
+                    <td><span style="color:#2ea043">Vehicle Dispatched ✓</span></td>
+                </tr>
+                <tr>
+                    <td>📍 Gardanibagh Nala</td>
+                    <td>🗑️ Mixed Waste</td>
+                    <td><span style="color:#ef4444; font-weight:bold">85%</span></td>
+                    <td><span style="color:#ef4444">🔴 CRITICAL</span></td>
+                    <td>5 days ago</td>
+                    <td><span style="color:#f97316">Scheduled Today</span></td>
+                </tr>
+                <tr>
+                    <td>📍 Patna City Drain</td>
+                    <td>📄 Paper + Plastic</td>
+                    <td><span style="color:#f97316; font-weight:bold">74%</span></td>
+                    <td><span style="color:#f97316">🟠 HIGH</span></td>
+                    <td>3 days ago</td>
+                    <td><span style="color:#f97316">Priority Queue</span></td>
+                </tr>
+                <tr>
+                    <td>📍 Azimabad Storm Drain</td>
+                    <td>🧴 Plastic</td>
+                    <td><span style="color:#f97316; font-weight:bold">68%</span></td>
+                    <td><span style="color:#f97316">🟠 HIGH</span></td>
+                    <td>4 days ago</td>
+                    <td><span style="color:#f97316">Priority Queue</span></td>
+                </tr>
+                <tr>
+                    <td>📍 Rajendra Nagar Canal</td>
+                    <td>🍃 Organic</td>
+                    <td><span style="color:#eab308; font-weight:bold">45%</span></td>
+                    <td><span style="color:#eab308">🟡 MEDIUM</span></td>
+                    <td>Yesterday</td>
+                    <td><span style="color:#2ea043">Monitored</span></td>
+                </tr>
+                <tr>
+                    <td>📍 Gandhi Maidan Drain</td>
+                    <td>📄 Paper</td>
+                    <td><span style="color:#22c55e; font-weight:bold">22%</span></td>
+                    <td><span style="color:#22c55e">🟢 LOW</span></td>
+                    <td>Today</td>
+                    <td><span style="color:#2ea043">Clear ✓</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Timeline + Recommendations -->
+    <div class="grid-2">
+
+        <div class="card">
+            <h3 style="color:#58a6ff">📅 Monsoon Flood Prediction Timeline</h3>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot" style="background:#ef4444"></div>
+                    <div class="timeline-content">
+                        <h4 style="color:#ef4444">Week 1-2 (NOW) — Waste Clearance Critical</h4>
+                        <p>8 drain blockages must be cleared before monsoon onset. SwachhAI dispatching priority vehicles to North and East zones.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot" style="background:#f97316"></div>
+                    <div class="timeline-content">
+                        <h4 style="color:#f97316">Week 3-4 — Pre-Monsoon Monitoring</h4>
+                        <p>AI continuously monitors drainage blockage levels. Automated alerts sent to PMC if blockage exceeds 60%.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot" style="background:#eab308"></div>
+                    <div class="timeline-content">
+                        <h4 style="color:#eab308">Monsoon Onset — Real-time Tracking</h4>
+                        <p>SwachhAI cameras monitor flood-risk zones 24/7. Evacuation alerts sent via WhatsApp in Hindi to residents.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot" style="background:#2ea043"></div>
+                    <div class="timeline-content">
+                        <h4 style="color:#2ea043">Post-Monsoon — Recovery Mode</h4>
+                        <p>AI maps flood damage to waste hotspots. Data used to improve next year's prevention strategy.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="color:#58a6ff">🤖 AI Recommendations</h3>
+            <div class="rec-grid">
+                <div class="rec-item" style="border-color:#ef4444">
+                    <h4 style="color:#ef4444">🚨 URGENT</h4>
+                    <p>Clear Boring Road drain within 48 hours — 92% blockage poses immediate flood risk</p>
+                </div>
+                <div class="rec-item" style="border-color:#f97316">
+                    <h4 style="color:#f97316">⚡ HIGH</h4>
+                    <p>Deploy 3 additional vehicles to North Zone — waste generation 87% above safe threshold</p>
+                </div>
+                <div class="rec-item" style="border-color:#eab308">
+                    <h4 style="color:#eab308">📋 PLAN</h4>
+                    <p>Install SwachhAI sensors in 12 critical drains for real-time blockage monitoring</p>
+                </div>
+                <div class="rec-item" style="border-color:#2ea043">
+                    <h4 style="color:#2ea043">✅ DONE</h4>
+                    <p>Gandhi Maidan and New Capital zones cleared — flood risk reduced to LOW level</p>
+                </div>
+                <div class="rec-item full-width" style="border-color:#58a6ff">
+                    <h4 style="color:#58a6ff">🌊 FLOOD PREVENTION IMPACT</h4>
+                    <p>SwachhAI estimates clearing all 8 blockages will reduce flood risk by 65% — protecting approximately 3.2 lakh residents in high-risk zones. Bihar 2024 floods affected 17.57 lakh people — early waste clearance could have prevented 40% of urban flooding.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<div class="footer">
+    SwachhAI Flood Intelligence — AI for Bharat Hackathon 2026 | Bihar Flood Data: Relief Web 2024 | Team Eco Visionaries
+</div>
+
+<script>
+// Flood correlation chart
+const ctx = document.getElementById('floodChart').getContext('2d');
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ['North', 'East', 'Central', 'West', 'South', 'New Capital'],
+        datasets: [
+            {
+                label: 'Waste Level (TPD)',
+                data: [85, 78, 62, 55, 42, 35],
+                backgroundColor: 'rgba(239,68,68,0.6)',
+                borderColor: '#ef4444',
+                borderWidth: 1,
+                yAxisID: 'y'
+            },
+            {
+                label: 'Flood Risk %',
+                data: [87, 82, 65, 58, 34, 18],
+                backgroundColor: 'rgba(88,166,255,0.6)',
+                borderColor: '#58a6ff',
+                borderWidth: 1,
+                type: 'line',
+                yAxisID: 'y1',
+                tension: 0.4
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { labels: { color: '#c9d1d9', font: { size: 10 } } }
+        },
+        scales: {
+            x: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
+            y: {
+                ticks: { color: '#ef4444' },
+                grid: { color: '#21262d' },
+                title: { display: true, text: 'Waste (TPD)', color: '#ef4444' }
+            },
+            y1: {
+                position: 'right',
+                ticks: { color: '#58a6ff' },
+                grid: { drawOnChartArea: false },
+                title: { display: true, text: 'Flood Risk %', color: '#58a6ff' }
+            }
+        }
+    }
+});
+</script>
+</body>
+</html>

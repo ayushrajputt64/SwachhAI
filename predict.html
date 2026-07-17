@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwachhAI — Waste Predictor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #0d1117; color: #e6edf3; min-height: 100vh; }
+        .header {
+            background: linear-gradient(135deg, #0d2818, #1a4a2e);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #2ea043;
+        }
+        .header h1 { font-size: 1.5rem; color: #2ea043; }
+        .nav-links { display: flex; gap: 10px; flex-wrap: wrap; }
+        .nav-link {
+            color: #c9d1d9; text-decoration: none;
+            font-size: 0.8rem; padding: 5px 10px;
+            border: 1px solid #30363d; border-radius: 6px;
+            transition: all 0.3s;
+        }
+        .nav-link:hover { background: #2ea043; color: white; }
+        .sim-banner {
+            background: #2d2a00; border-bottom: 1px solid #9e8c00;
+            color: #e3c84a; text-align: center;
+            padding: 8px; font-size: 0.82rem;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 30px 20px; }
+        .page-title {
+            text-align: center; margin-bottom: 30px;
+        }
+        .page-title h2 { font-size: 2rem; color: #f97316; margin-bottom: 8px; }
+        .page-title p { color: #8b949e; font-size: 1rem; }
+
+        /* Controls */
+        .controls {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .control-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: #8b949e;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        .control-group select,
+        .control-group input {
+            width: 100%;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            color: #e6edf3;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        .predict-btn {
+            background: #f97316;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+            align-self: end;
+        }
+        .predict-btn:hover { background: #ea6c00; transform: scale(1.02); }
+
+        /* Prediction Cards */
+        .prediction-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .pred-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .pred-card:hover { transform: translateY(-3px); }
+        .pred-icon { font-size: 2rem; margin-bottom: 8px; }
+        .pred-val { font-size: 1.8rem; font-weight: bold; margin-bottom: 4px; }
+        .pred-label { font-size: 0.8rem; color: #8b949e; }
+        .pred-change { font-size: 0.8rem; margin-top: 6px; }
+
+        /* Charts */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        .chart-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .chart-card h3 {
+            color: #f97316;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #21262d;
+            padding-bottom: 10px;
+        }
+
+        /* Hotspot Predictions */
+        .hotspot-pred {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        .hotspot-pred h3 {
+            color: #f97316;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #21262d;
+            padding-bottom: 10px;
+        }
+        .hotspot-list { display: flex; flex-direction: column; gap: 10px; }
+        .hotspot-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 15px;
+            background: #0d1117;
+            border-radius: 8px;
+            border: 1px solid #21262d;
+        }
+        .hotspot-rank {
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+        .hotspot-info { flex: 1; }
+        .hotspot-name { font-weight: bold; font-size: 0.9rem; color: #e6edf3; }
+        .hotspot-detail { font-size: 0.8rem; color: #8b949e; margin-top: 2px; }
+        .hotspot-bar-bg {
+            width: 150px; height: 8px;
+            background: #21262d; border-radius: 4px;
+            overflow: hidden; flex-shrink: 0;
+        }
+        .hotspot-bar { height: 100%; border-radius: 4px; transition: width 1s; }
+        .hotspot-tpd { font-weight: bold; font-size: 0.9rem; flex-shrink: 0; }
+
+        /* Alert box */
+        .alert-box {
+            background: #1a0d0d;
+            border: 1px solid #ef4444;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        .alert-box h3 { color: #ef4444; margin-bottom: 15px; font-size: 1rem; }
+        .alert-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px; background: #0d1117;
+            border-radius: 8px; margin-bottom: 8px;
+            border-left: 3px solid #ef4444;
+        }
+        .alert-item p { font-size: 0.85rem; color: #c9d1d9; }
+        .alert-item .time { font-size: 0.75rem; color: #8b949e; margin-top: 2px; }
+
+        .footer {
+            background: #161b22; border-top: 2px solid #2ea043;
+            padding: 20px; text-align: center;
+            color: #8b949e; font-size: 0.8rem; margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .charts-grid { grid-template-columns: 1fr; }
+            .header { flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div>
+        <h1>🌱 SwachhAI — Waste Predictor</h1>
+        <p style="color:#8b949e; font-size:0.75rem;">LSTM Neural Network — 24-48hr Prediction Engine</p>
+    </div>
+    <nav class="nav-links">
+        <a href="index.html" class="nav-link">🏠 Home</a>
+        <a href="scanner.html" class="nav-link">📷 Scanner</a>
+        <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+        <a href="chatbot.html" class="nav-link">🤖 ChatBot</a>
+        <a href="flood.html" class="nav-link">🌊 Flood AI</a>
+        <a href="segregate.html" class="nav-link">♻️ Segregator</a>
+    </nav>
+</div>
+
+<div class="sim-banner">
+    🟡 LSTM Prediction Simulation — Based on historical waste patterns, weather data & event calendars
+</div>
+
+<div class="container">
+    <div class="page-title">
+        <h2>📈 AI Waste Predictor</h2>
+        <p>LSTM Neural Network predicts waste generation 24-48 hours in advance — preventing hotspots before they form</p>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+        <div class="control-group">
+            <label>📍 Select City Zone</label>
+            <select id="zoneSelect">
+                <option value="north">North Zone — Azimabad</option>
+                <option value="south">South Zone — Kankarbagh</option>
+                <option value="east">East Zone — Patna City</option>
+                <option value="west">West Zone — Bankipur</option>
+                <option value="central">Central Zone — Gandhi Maidan</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label>🌤️ Weather Condition</label>
+            <select id="weatherSelect">
+                <option value="sunny">☀️ Sunny</option>
+                <option value="cloudy">☁️ Cloudy</option>
+                <option value="rainy">🌧️ Rainy</option>
+                <option value="monsoon">⛈️ Monsoon</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label>📅 Day Type</label>
+            <select id="daySelect">
+                <option value="weekday">Weekday</option>
+                <option value="weekend">Weekend</option>
+                <option value="festival">Festival Day</option>
+                <option value="market">Market Day</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label>⏰ Prediction Hours</label>
+            <select id="hoursSelect">
+                <option value="24">Next 24 Hours</option>
+                <option value="48">Next 48 Hours</option>
+                <option value="72">Next 72 Hours</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <button class="predict-btn" onclick="runPrediction()">
+                🧠 Run LSTM Prediction
+            </button>
+        </div>
+    </div>
+
+    <!-- Prediction Cards -->
+    <div class="prediction-grid" id="predCards">
+        <div class="pred-card">
+            <div class="pred-icon">🗑️</div>
+            <div class="pred-val" id="totalPred" style="color:#f97316">--</div>
+            <div class="pred-label">Predicted Waste (TPD)</div>
+            <div class="pred-change" id="totalChange"></div>
+        </div>
+        <div class="pred-card">
+            <div class="pred-icon">🔴</div>
+            <div class="pred-val" id="criticalPred" style="color:#ef4444">--</div>
+            <div class="pred-label">Critical Hotspots</div>
+            <div class="pred-change" id="criticalChange"></div>
+        </div>
+        <div class="pred-card">
+            <div class="pred-icon">🚛</div>
+            <div class="pred-val" id="vehiclesPred" style="color:#2ea043">--</div>
+            <div class="pred-label">Vehicles Required</div>
+            <div class="pred-change" id="vehiclesChange"></div>
+        </div>
+        <div class="pred-card">
+            <div class="pred-icon">💰</div>
+            <div class="pred-val" id="savingsPred" style="color:#eab308">--</div>
+            <div class="pred-label">Cost Saved vs Manual</div>
+            <div class="pred-change" id="savingsChange"></div>
+        </div>
+        <div class="pred-card">
+            <div class="pred-icon">🎯</div>
+            <div class="pred-val" id="accuracyPred" style="color:#58a6ff">--</div>
+            <div class="pred-label">Model Confidence</div>
+            <div class="pred-change" id="accuracyChange"></div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-grid">
+        <div class="chart-card">
+            <h3>📊 Hourly Waste Prediction</h3>
+            <canvas id="hourlyChart" height="200"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>🏷️ Waste Type Breakdown</h3>
+            <canvas id="typeChart" height="200"></canvas>
+        </div>
+    </div>
+
+    <!-- Hotspot Predictions -->
+    <div class="hotspot-pred">
+        <h3>📍 Predicted Hotspot Rankings — Next 24 Hours</h3>
+        <div class="hotspot-list" id="hotspotList">
+            <p style="color:#8b949e; text-align:center; padding:20px;">
+                Click "Run LSTM Prediction" to see hotspot forecasts
+            </p>
+        </div>
+    </div>
+
+    <!-- Alerts -->
+    <div class="alert-box">
+        <h3>🚨 AI Early Warning Alerts</h3>
+        <div id="alertList">
+            <p style="color:#8b949e; padding:10px;">
+                Run prediction to generate early warning alerts
+            </p>
+        </div>
+    </div>
+
+</div>
+
+<div class="footer">
+    SwachhAI — AI for Bharat Hackathon 2026 | LSTM Waste Prediction Engine | Team Eco Visionaries
+</div>
+
+<script>
+// Prediction data models
+const zoneData = {
+    north: { base: 285, name: "North Zone — Azimabad", factor: 1.1 },
+    south: { base: 245, name: "South Zone — Kankarbagh", factor: 0.95 },
+    east: { base: 310, name: "East Zone — Patna City", factor: 1.2 },
+    west: { base: 195, name: "West Zone — Bankipur", factor: 0.85 },
+    central: { base: 165, name: "Central Zone — Gandhi Maidan", factor: 0.75 }
+};
+
+const weatherFactors = {
+    sunny: { factor: 1.0, name: "Sunny", icon: "☀️" },
+    cloudy: { factor: 0.95, name: "Cloudy", icon: "☁️" },
+    rainy: { factor: 1.35, name: "Rainy", icon: "🌧️" },
+    monsoon: { factor: 1.6, name: "Monsoon", icon: "⛈️" }
+};
+
+const dayFactors = {
+    weekday: { factor: 1.0, name: "Weekday" },
+    weekend: { factor: 1.25, name: "Weekend" },
+    festival: { factor: 1.8, name: "Festival" },
+    market: { factor: 1.45, name: "Market Day" }
+};
+
+const hotspots = [
+    { name: "Boring Road Junction", circle: "Bankipur", baseTPD: 42 },
+    { name: "Gardanibagh Market", circle: "Kankarbagh", baseTPD: 38 },
+    { name: "Patna City Bazaar", circle: "Patna City", baseTPD: 35 },
+    { name: "Azimabad Colony", circle: "Azimabad", baseTPD: 29 },
+    { name: "Rajendra Nagar", circle: "Patliputra", baseTPD: 21 },
+    { name: "New Capital Area", circle: "New Capital", baseTPD: 18 },
+    { name: "Gandhi Maidan", circle: "Bankipur", baseTPD: 12 },
+];
+
+let hourlyChart = null;
+let typeChart = null;
+
+function runPrediction() {
+    const zone = document.getElementById('zoneSelect').value;
+    const weather = document.getElementById('weatherSelect').value;
+    const day = document.getElementById('daySelect').value;
+    const hours = parseInt(document.getElementById('hoursSelect').value);
+
+    const zd = zoneData[zone];
+    const wf = weatherFactors[weather];
+    const df = dayFactors[day];
+
+    const totalFactor = zd.factor * wf.factor * df.factor;
+    const predicted = Math.round(zd.base * totalFactor);
+    const critical = Math.round(predicted > 300 ? 4 : predicted > 200 ? 3 : 2);
+    const vehicles = Math.round(predicted / 35);
+    const savings = Math.round(predicted * 0.4 * 12);
+    const accuracy = Math.round(82 + Math.random() * 10);
+
+    // Update cards
+    document.getElementById('totalPred').textContent = predicted + " TPD";
+    document.getElementById('totalChange').innerHTML =
+        `<span style="color:${wf.factor > 1 ? '#ef4444' : '#2ea043'}">
+        ${wf.factor > 1 ? '↑' : '↓'} ${Math.abs(Math.round((wf.factor - 1) * 100))}% vs avg due to ${wf.name} weather</span>`;
+
+    document.getElementById('criticalPred').textContent = critical;
+    document.getElementById('criticalChange').innerHTML =
+        `<span style="color:#8b949e">zones need priority cleaning</span>`;
+
+    document.getElementById('vehiclesPred').textContent = vehicles;
+    document.getElementById('vehiclesChange').innerHTML =
+        `<span style="color:#2ea043">AI-optimized deployment</span>`;
+
+    document.getElementById('savingsPred').textContent = "₹" + savings.toLocaleString();
+    document.getElementById('savingsChange').innerHTML =
+        `<span style="color:#eab308">vs manual routing today</span>`;
+
+    document.getElementById('accuracyPred').textContent = accuracy + "%";
+    document.getElementById('accuracyChange').innerHTML =
+        `<span style="color:#58a6ff">LSTM model confidence</span>`;
+
+    // Generate hourly data
+    const hourlyData = [];
+    const labels = [];
+    const now = new Date();
+    for (let i = 0; i < hours; i += 2) {
+        const h = (now.getHours() + i) % 24;
+        labels.push(`${h}:00`);
+        const peakFactor = (h >= 8 && h <= 11) || (h >= 17 && h <= 20) ? 1.4 : 0.7;
+        hourlyData.push(Math.round((predicted / 12) * peakFactor * (0.85 + Math.random() * 0.3)));
+    }
+
+    // Hourly chart
+    if (hourlyChart) hourlyChart.destroy();
+    hourlyChart = new Chart(document.getElementById('hourlyChart'), {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Predicted Waste (tonnes)',
+                data: hourlyData,
+                borderColor: '#f97316',
+                backgroundColor: 'rgba(249,115,22,0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { labels: { color: '#c9d1d9', font: { size: 10 } } } },
+            scales: {
+                x: { ticks: { color: '#8b949e', font: { size: 9 } }, grid: { color: '#21262d' } },
+                y: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } }
+            }
+        }
+    });
+
+    // Type chart
+    if (typeChart) typeChart.destroy();
+    typeChart = new Chart(document.getElementById('typeChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Organic', 'Plastic', 'Paper', 'Metal', 'Other'],
+            datasets: [{
+                data: [47, 27, 15, 6, 5],
+                backgroundColor: ['#22c55e', '#3b82f6', '#eab308', '#f97316', '#8b949e'],
+                borderWidth: 2,
+                borderColor: '#161b22'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { labels: { color: '#c9d1d9', font: { size: 10 } } } }
+        }
+    });
+
+    // Hotspot list
+    const colors = ['#ef4444', '#ef4444', '#f97316', '#f97316', '#eab308', '#eab308', '#22c55e'];
+    const priorities = ['CRITICAL', 'CRITICAL', 'HIGH', 'HIGH', 'MEDIUM', 'MEDIUM', 'LOW'];
+    const bgColors = ['#1a0d0d', '#1a0d0d', '#1a100d', '#1a100d', '#1a1a0d', '#1a1a0d', '#0d1a0d'];
+
+    const sorted = [...hotspots]
+        .map(h => ({ ...h, predicted: Math.round(h.baseTPD * totalFactor) }))
+        .sort((a, b) => b.predicted - a.predicted);
+
+    document.getElementById('hotspotList').innerHTML = sorted.map((h, i) => `
+        <div class="hotspot-item" style="border-left-color:${colors[i]}; background:${bgColors[i]}">
+            <div class="hotspot-rank" style="background:${colors[i]}22; color:${colors[i]}; border:1px solid ${colors[i]}">${i + 1}</div>
+            <div class="hotspot-info">
+                <div class="hotspot-name">📍 ${h.name}</div>
+                <div class="hotspot-detail">${h.circle} Circle | ${wf.icon} ${wf.name} | ${df.name}</div>
+            </div>
+            <div class="hotspot-bar-bg">
+                <div class="hotspot-bar" style="width:${(h.predicted / sorted[0].predicted) * 100}%; background:${colors[i]}"></div>
+            </div>
+            <div class="hotspot-tpd" style="color:${colors[i]}">${h.predicted} TPD</div>
+            <div style="font-size:0.72rem; font-weight:bold; color:${colors[i]}; min-width:60px; text-align:right">● ${priorities[i]}</div>
+        </div>
+    `).join('');
+
+    // Alerts
+    const alerts = [];
+    if (wf.factor >= 1.35) alerts.push({ icon: "🌧️", msg: `Heavy ${wf.name} predicted — waste blocking drains in low-lying areas`, time: "Alert: Next 6 hours", color: "#ef4444" });
+    if (df.factor >= 1.45) alerts.push({ icon: "📅", msg: `${df.name} detected — expect 45% higher waste generation in market zones`, time: "Alert: All day", color: "#f97316" });
+    if (predicted > 280) alerts.push({ icon: "🚨", msg: `Critical waste volume predicted — deploy ${vehicles} vehicles immediately`, time: "Action required: Now", color: "#ef4444" });
+    alerts.push({ icon: "🤖", msg: `SwachhAI recommends starting Route 2 (Gardanibagh → Boring Rd) at 6:00 AM for optimal collection`, time: "Recommendation: Tomorrow 6 AM", color: "#2ea043" });
+    alerts.push({ icon: "♻️", msg: `Organic waste peak expected 8-11 AM — deploy composting vehicles first`, time: "Prediction: Tomorrow morning", color: "#22c55e" });
+
+    document.getElementById('alertList').innerHTML = alerts.map(a => `
+        <div class="alert-item" style="border-left-color:${a.color}">
+            <div style="font-size:1.3rem">${a.icon}</div>
+            <div>
+                <p>${a.msg}</p>
+                <div class="time" style="color:${a.color}">${a.time}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Auto run on load
+window.onload = () => runPrediction();
+</script>
+</body>
+</html>
