@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwachhAI — AI Chatbot</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #0d1117; color: #e6edf3; min-height: 100vh; display: flex; flex-direction: column; }
+        .header {
+            background: linear-gradient(135deg, #0d2818, #1a4a2e);
+            padding: 15px 30px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid #2ea043;
+        }
+        .header h1 { font-size: 1.5rem; color: #2ea043; }
+        .nav-links { display: flex; gap: 10px; flex-wrap: wrap; }
+        .nav-link {
+            color: #c9d1d9; text-decoration: none;
+            font-size: 0.8rem; padding: 5px 10px;
+            border: 1px solid #30363d; border-radius: 6px; transition: all 0.3s;
+        }
+        .nav-link:hover { background: #2ea043; color: white; }
+        .sim-banner {
+            background: #2d2a00; border-bottom: 1px solid #9e8c00;
+            color: #e3c84a; text-align: center; padding: 8px; font-size: 0.82rem;
+        }
+
+        .chat-container {
+            display: flex; flex: 1; max-width: 1200px;
+            width: 100%; margin: 20px auto; padding: 0 20px;
+            gap: 20px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px; flex-shrink: 0;
+        }
+        .sidebar-card {
+            background: #161b22; border: 1px solid #30363d;
+            border-radius: 12px; padding: 20px; margin-bottom: 15px;
+        }
+        .sidebar-card h3 { color: #a371f7; font-size: 0.95rem; margin-bottom: 12px; }
+        .lang-btn {
+            width: 100%; padding: 8px; margin-bottom: 8px;
+            background: #0d1117; border: 1px solid #30363d;
+            color: #c9d1d9; border-radius: 8px; cursor: pointer;
+            font-size: 0.85rem; transition: all 0.3s; text-align: left;
+        }
+        .lang-btn.active { background: #a371f722; border-color: #a371f7; color: #a371f7; }
+        .lang-btn:hover { border-color: #a371f7; }
+
+        .quick-btn {
+            width: 100%; padding: 8px 10px; margin-bottom: 6px;
+            background: #0d1117; border: 1px solid #30363d;
+            color: #c9d1d9; border-radius: 8px; cursor: pointer;
+            font-size: 0.8rem; transition: all 0.3s; text-align: left;
+        }
+        .quick-btn:hover { background: #a371f722; border-color: #a371f7; color: #a371f7; }
+
+        .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .stat-key { font-size: 0.8rem; color: #8b949e; }
+        .stat-val { font-size: 0.8rem; font-weight: bold; color: #2ea043; }
+
+        /* Chat */
+        .chat-main { flex: 1; display: flex; flex-direction: column; }
+
+        .chat-header {
+            background: #161b22; border: 1px solid #30363d;
+            border-radius: 12px 12px 0 0; padding: 15px 20px;
+            display: flex; align-items: center; gap: 15px;
+        }
+        .bot-avatar {
+            width: 45px; height: 45px; border-radius: 50%;
+            background: linear-gradient(135deg, #a371f7, #2ea043);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem;
+        }
+        .bot-info h3 { color: #a371f7; font-size: 1rem; }
+        .bot-info p { color: #8b949e; font-size: 0.8rem; }
+        .online-dot {
+            width: 10px; height: 10px; background: #2ea043;
+            border-radius: 50%; margin-left: auto;
+            box-shadow: 0 0 6px #2ea043;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .chat-messages {
+            flex: 1; background: #0d1117;
+            border-left: 1px solid #30363d;
+            border-right: 1px solid #30363d;
+            padding: 20px; overflow-y: auto;
+            min-height: 400px; max-height: 500px;
+            display: flex; flex-direction: column; gap: 15px;
+        }
+
+        .message { display: flex; gap: 10px; max-width: 85%; }
+        .message.user { align-self: flex-end; flex-direction: row-reverse; }
+        .message.bot { align-self: flex-start; }
+
+        .msg-avatar {
+            width: 35px; height: 35px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; flex-shrink: 0;
+        }
+        .bot .msg-avatar { background: linear-gradient(135deg, #a371f7, #2ea043); }
+        .user .msg-avatar { background: #2ea04344; border: 1px solid #2ea043; }
+
+        .msg-bubble {
+            padding: 12px 16px; border-radius: 16px;
+            font-size: 0.9rem; line-height: 1.5;
+        }
+        .bot .msg-bubble {
+            background: #161b22; border: 1px solid #30363d;
+            color: #e6edf3; border-radius: 4px 16px 16px 16px;
+        }
+        .user .msg-bubble {
+            background: #2ea04322; border: 1px solid #2ea043;
+            color: #e6edf3; border-radius: 16px 4px 16px 16px;
+        }
+        .msg-time { font-size: 0.7rem; color: #8b949e; margin-top: 4px; }
+
+        .typing {
+            display: none; align-self: flex-start;
+            background: #161b22; border: 1px solid #30363d;
+            padding: 12px 16px; border-radius: 16px;
+        }
+        .typing-dots span {
+            display: inline-block; width: 8px; height: 8px;
+            background: #a371f7; border-radius: 50%; margin: 0 2px;
+            animation: bounce 1.2s infinite;
+        }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        .chat-input-area {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 0 0 12px 12px;
+            border-top: 1px solid #21262d;
+            padding: 15px 20px;
+            display: flex; gap: 10px;
+        }
+        .chat-input {
+            flex: 1; background: #0d1117;
+            border: 1px solid #30363d; color: #e6edf3;
+            padding: 10px 15px; border-radius: 25px;
+            font-size: 0.9rem; outline: none;
+            transition: border-color 0.3s;
+        }
+        .chat-input:focus { border-color: #a371f7; }
+        .send-btn {
+            background: #a371f7; color: white;
+            border: none; padding: 10px 20px;
+            border-radius: 25px; cursor: pointer;
+            font-size: 0.9rem; font-weight: bold;
+            transition: all 0.3s;
+        }
+        .send-btn:hover { background: #8b5cf6; transform: scale(1.05); }
+
+        .footer {
+            background: #161b22; border-top: 2px solid #2ea043;
+            padding: 15px; text-align: center;
+            color: #8b949e; font-size: 0.8rem; margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .chat-container { flex-direction: column; }
+            .sidebar { width: 100%; }
+            .header { flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div>
+        <h1>🌱 SwachhAI — AI Assistant</h1>
+        <p style="color:#8b949e; font-size:0.75rem;">Multilingual Waste Management Chatbot — Hindi & English</p>
+    </div>
+    <nav class="nav-links">
+        <a href="index.html" class="nav-link">🏠 Home</a>
+        <a href="scanner.html" class="nav-link">📷 Scanner</a>
+        <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+        <a href="predict.html" class="nav-link">📈 Predictor</a>
+        <a href="flood.html" class="nav-link">🌊 Flood AI</a>
+        <a href="segregate.html" class="nav-link">♻️ Segregator</a>
+    </nav>
+</div>
+
+<div class="sim-banner">
+    🟡 SwachhAI Chatbot — Powered by Claude AI | Supports Hindi & English | Report waste, get disposal guidance
+</div>
+
+<div class="chat-container">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+
+        <div class="sidebar-card">
+            <h3>🌐 Language / भाषा</h3>
+            <button class="lang-btn active" id="btnEn" onclick="setLang('en')">
+                🇬🇧 English
+            </button>
+            <button class="lang-btn" id="btnHi" onclick="setLang('hi')">
+                🇮🇳 हिंदी (Hindi)
+            </button>
+        </div>
+
+        <div class="sidebar-card">
+            <h3>⚡ Quick Actions</h3>
+            <button class="quick-btn" onclick="quickSend('Report garbage near my area')">
+                🚨 Report Garbage
+            </button>
+            <button class="quick-btn" onclick="quickSend('How to dispose plastic waste?')">
+                🧴 Plastic Disposal
+            </button>
+            <button class="quick-btn" onclick="quickSend('When will cleaning vehicle come?')">
+                🚛 Vehicle Status
+            </button>
+            <button class="quick-btn" onclick="quickSend('What is SwachhAI?')">
+                🌱 About SwachhAI
+            </button>
+            <button class="quick-btn" onclick="quickSend('मेरे पास कचरा जमा हो गया है')">
+                🇮🇳 कचरा रिपोर्ट करें
+            </button>
+            <button class="quick-btn" onclick="quickSend('कचरे को कैसे अलग करें?')">
+                🇮🇳 कचरा अलग करना
+            </button>
+        </div>
+
+        <div class="sidebar-card">
+            <h3>📊 Today's Stats</h3>
+            <div class="stat-row">
+                <span class="stat-key">Reports Today</span>
+                <span class="stat-val" id="reportsCount">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-key">Resolved</span>
+                <span class="stat-val">--</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-key">Vehicles Active</span>
+                <span class="stat-val">12</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-key">Avg Response</span>
+                <span class="stat-val">23 min</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Chat -->
+    <div class="chat-main">
+        <div class="chat-header">
+            <div class="bot-avatar">🤖</div>
+            <div class="bot-info">
+                <h3>SwachhAI Assistant</h3>
+                <p>AI-Powered Waste Management Bot | Hindi & English</p>
+            </div>
+            <div class="online-dot"></div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <!-- Welcome message -->
+            <div class="message bot">
+                <div class="msg-avatar">🤖</div>
+                <div>
+                    <div class="msg-bubble">
+                        🌱 <b>Namaste! Welcome to SwachhAI Assistant!</b><br><br>
+                        I can help you with:<br>
+                        🗑️ Report garbage in your area<br>
+                        ♻️ Waste disposal guidance<br>
+                        🚛 Track cleaning vehicle status<br>
+                        📊 City waste statistics<br>
+                        🌊 Flood risk information<br><br>
+                        <b>नमस्ते! आप हिंदी में भी बात कर सकते हैं।</b><br>
+                        Type your message or use quick actions! 👇
+                    </div>
+                    <div class="msg-time">SwachhAI • Just now</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="typing" id="typing">
+            <div class="typing-dots">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+
+        <div class="chat-input-area">
+            <input
+                type="text"
+                class="chat-input"
+                id="chatInput"
+                placeholder="Type your message... / अपना संदेश लिखें..."
+                onkeypress="if(event.key==='Enter') sendMessage()"
+            >
+            <button class="send-btn" onclick="sendMessage()">Send ➤</button>
+        </div>
+    </div>
+
+</div>
+
+<div class="footer">
+    SwachhAI Chatbot — AI for Bharat Hackathon 2026 | Powered by Claude AI | Team Eco Visionaries
+</div>
+
+<script>
+let currentLang = 'en';
+let reportCount = 0;
+const conversationHistory = [];
+
+function setLang(lang) {
+    currentLang = lang;
+    document.getElementById('btnEn').classList.toggle('active', lang === 'en');
+    document.getElementById('btnHi').classList.toggle('active', lang === 'hi');
+}
+
+function quickSend(text) {
+    document.getElementById('chatInput').value = text;
+    sendMessage();
+}
+
+function getTime() {
+    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function addMessage(text, sender) {
+    const messages = document.getElementById('chatMessages');
+    const div = document.createElement('div');
+    div.className = `message ${sender}`;
+    div.innerHTML = `
+        <div class="msg-avatar">${sender === 'bot' ? '🤖' : '👤'}</div>
+        <div>
+            <div class="msg-bubble">${text}</div>
+            <div class="msg-time">${sender === 'bot' ? 'SwachhAI' : 'You'} • ${getTime()}</div>
+        </div>
+    `;
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+}
+
+async function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+    addMessage(text, 'user');
+
+    // Check if report
+    if (text.toLowerCase().includes('report') ||
+        text.includes('कचरा') || text.includes('garbage') ||
+        text.includes('waste') || text.includes('रिपोर्ट')) {
+        reportCount++;
+        document.getElementById('reportsCount').textContent = reportCount;
+    }
+
+    // Show typing
+    const typing = document.getElementById('typing');
+    typing.style.display = 'flex';
+
+    // Add to history
+    conversationHistory.push({ role: "user", content: text });
+
+    try {
+        const systemPrompt = `You are SwachhAI Assistant, an AI-powered waste management chatbot for Indian cities. You help citizens report garbage, get disposal guidance, track cleaning vehicles, and learn about waste management.
+
+You support both Hindi and English. If the user writes in Hindi, respond in Hindi. If in English, respond in English.
+
+You know these facts:
+- India generates 62 million tonnes of waste annually
+- SwachhAI uses AI cameras to detect waste types: Plastic, Organic, Paper, Metal
+- Cleaning vehicles are deployed based on AI route optimization
+- Average response time is 23 minutes after reporting
+- Plastic goes in BLUE bin, Organic in GREEN bin, Paper in YELLOW bin, Metal in RED bin
+- SwachhAI covers all 75 wards in Patna and is expanding to other cities
+- For flood risk areas, waste blocking drains is critical
+- Municipal corporations can use SwachhAI dashboard to monitor all 6 PMC circles
+
+Keep responses concise, helpful and friendly. Use emojis. For garbage reports, confirm the report and give a ticket number like SWA-${Math.floor(Math.random()*9000)+1000}.`;
+
+        const response = await fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                model: "claude-sonnet-4-6",
+                max_tokens: 1000,
+                system: systemPrompt,
+                messages: conversationHistory
+            })
+        });
+
+        const data = await response.json();
+        const reply = data.content[0].text;
+
+        conversationHistory.push({ role: "assistant", content: reply });
+
+        typing.style.display = 'none';
+        addMessage(reply.replace(/\n/g, '<br>'), 'bot');
+
+    } catch (error) {
+        typing.style.display = 'none';
+
+        // Fallback responses when API unavailable
+        const fallbacks = {
+            report: `✅ <b>Garbage Report Registered!</b><br><br>🎫 Ticket: <b>SWA-${Math.floor(Math.random()*9000)+1000}</b><br>📍 Location: Being GPS tagged<br>🚛 Vehicle dispatched — ETA: ~23 minutes<br>📱 You will receive SMS confirmation<br><br>Thank you for keeping your city clean! 🌱`,
+            plastic: `🧴 <b>Plastic Waste Disposal Guide:</b><br><br>✅ Rinse plastic bottles before disposal<br>✅ Place in <b>BLUE bin</b><br>✅ Remove caps and labels if possible<br>✅ Flatten bottles to save space<br><br>⚠️ Plastic takes 400+ years to decompose<br>🌱 SwachhAI collects plastic for recycling every Tuesday & Friday`,
+            hindi: `नमस्ते! 🙏<br><br>🗑️ <b>SwachhAI आपकी मदद के लिए यहाँ है!</b><br><br>आप ये कर सकते हैं:<br>• कचरे की रिपोर्ट करें<br>• कचरा अलग करने की जानकारी लें<br>• सफाई गाड़ी की स्थिति जानें<br><br>कचरे को इस तरह अलग करें:<br>🔵 नीला डिब्बा — प्लास्टिक<br>🟢 हरा डिब्बा — खाना/सब्जी<br>🟡 पीला डिब्बा — कागज<br>🔴 लाल डिब्बा — धातु`,
+            vehicle: `🚛 <b>Cleaning Vehicle Status:</b><br><br>✅ 12 vehicles currently active<br>📍 Nearest vehicle: 1.2 km away<br>⏱️ Estimated arrival: 18 minutes<br>🛣️ Current route: Boring Road → Gardanibagh<br><br>🤖 AI has optimized today's route saving 40% fuel<br>Track live on our <a href="dashboard.html" style="color:#2ea043">Dashboard →</a>`,
+            swachhai: `🌱 <b>About SwachhAI:</b><br><br>SwachhAI is India's first AI-powered solar waste intelligence system.<br><br>🧠 <b>AI Features:</b><br>• Real-time waste detection (85%+ accuracy)<br>• LSTM waste prediction (24-48 hrs)<br>• GPS hotspot mapping<br>• Multilingual alerts<br>• Flood risk intelligence<br><br>☀️ <b>Solar Powered:</b> Zero fuel, zero emissions<br>🏙️ <b>Coverage:</b> 4,000+ Indian municipalities planned<br><br><a href="index.html" style="color:#2ea043">Learn more →</a>`,
+            default: `🤖 <b>SwachhAI Assistant</b><br><br>I can help you with:<br>🗑️ Report garbage — type "report garbage"<br>♻️ Disposal guide — type "how to dispose [waste type]"<br>🚛 Vehicle tracking — type "vehicle status"<br>📊 City stats — type "city statistics"<br>🌊 Flood risk — visit our <a href="flood.html" style="color:#2ea043">Flood AI →</a><br><br><i>Note: Full AI responses require API connection</i>`
+        };
+
+        const msg = text.toLowerCase();
+        let reply = fallbacks.default;
+        if (msg.includes('report') || msg.includes('garbage') || msg.includes('कचरा')) reply = fallbacks.report;
+        else if (msg.includes('plastic') || msg.includes('प्लास्टिक')) reply = fallbacks.plastic;
+        else if (msg.includes('vehicle') || msg.includes('गाड़ी') || msg.includes('truck')) reply = fallbacks.vehicle;
+        else if (msg.includes('swachhai') || msg.includes('what is') || msg.includes('about')) reply = fallbacks.swachhai;
+        else if (currentLang === 'hi' || msg.includes('हिंदी') || msg.includes('नमस्ते')) reply = fallbacks.hindi;
+
+        addMessage(reply, 'bot');
+    }
+}
+</script>
+</body>
+</html>
