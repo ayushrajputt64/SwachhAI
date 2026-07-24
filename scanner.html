@@ -3,478 +3,332 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SwachhAI — AI for Bharat 2026</title>
+    <title>SwachhAI — Live Waste Scanner</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: #0d1117; color: #e6edf3; min-height: 100vh; }
-
-        /* Header */
         .header {
             background: linear-gradient(135deg, #0d2818, #1a4a2e);
-            padding: 20px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 15px 30px;
+            display: flex; justify-content: space-between; align-items: center;
             border-bottom: 2px solid #2ea043;
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            position: sticky; top: 0; z-index: 100;
         }
-        .header h1 { font-size: 1.8rem; color: #2ea043; }
-        .header p { color: #8b949e; font-size: 0.8rem; margin-top: 3px; }
-        .nav-links { display: flex; gap: 15px; flex-wrap: wrap; }
+        .header h1 { font-size: 1.5rem; color: #2ea043; }
+        .nav-links { display: flex; gap: 10px; flex-wrap: wrap; }
         .nav-link {
             color: #c9d1d9; text-decoration: none;
-            font-size: 0.85rem; padding: 6px 12px;
-            border: 1px solid #30363d; border-radius: 6px;
-            transition: all 0.3s;
+            font-size: 0.8rem; padding: 5px 10px;
+            border: 1px solid #30363d; border-radius: 6px; transition: all 0.3s;
         }
-        .nav-link:hover { background: #2ea043; color: white; border-color: #2ea043; }
-
-        /* Hero */
-        .hero {
-            background: linear-gradient(135deg, #0d1117 0%, #0d2818 50%, #0d1117 100%);
-            padding: 60px 40px;
-            text-align: center;
-            border-bottom: 1px solid #21262d;
+        .nav-link:hover { background: #2ea043; color: white; }
+        .sim-banner {
+            background: #2d2a00; border-bottom: 1px solid #9e8c00;
+            color: #e3c84a; text-align: center; padding: 8px; font-size: 0.82rem;
         }
-        .hero-badge {
-            background: #2ea04322;
-            border: 1px solid #2ea043;
-            color: #2ea043;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            display: inline-block;
-            margin-bottom: 20px;
+        .container {
+            display: flex; gap: 25px;
+            padding: 25px 40px; max-width: 1300px; margin: 0 auto;
         }
-        .hero h2 {
-            font-size: 3rem;
-            color: #2ea043;
-            margin-bottom: 15px;
-            line-height: 1.2;
+        .card {
+            background: #161b22; border: 1px solid #30363d;
+            border-radius: 12px; padding: 22px; margin-bottom: 20px;
         }
-        .hero p {
-            font-size: 1.1rem;
-            color: #8b949e;
-            max-width: 700px;
-            margin: 0 auto 30px;
-            line-height: 1.6;
+        .card h2 { color: #2ea043; font-size: 1.1rem; margin-bottom: 12px;
+            border-bottom: 1px solid #21262d; padding-bottom: 10px; }
+        .subtitle { color: #8b949e; font-size: 0.85rem; margin-bottom: 15px; }
+        #webcam-container { display: flex; justify-content: center; margin: 15px 0; }
+        #webcam-container canvas { border-radius: 10px; border: 2px solid #2ea043; max-width: 100%; }
+        .btn-group { display: flex; gap: 12px; justify-content: center; margin: 15px 0; }
+        button {
+            padding: 11px 28px; border: none; border-radius: 8px;
+            font-size: 0.95rem; font-weight: bold; cursor: pointer; transition: all 0.3s;
         }
-        .hero-btns { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
-        .btn-primary {
-            background: #2ea043; color: white;
-            padding: 12px 28px; border-radius: 8px;
-            text-decoration: none; font-weight: bold;
-            font-size: 1rem; transition: all 0.3s;
+        .btn-green { background: #2ea043; color: white; }
+        .btn-green:hover { background: #3fb950; transform: scale(1.03); }
+        .btn-red { background: #da3633; color: white; }
+        button:disabled { background: #21262d; color: #484f58; cursor: not-allowed; transform: none; }
+        .status-bar {
+            background: #0d1117; border: 1px solid #30363d;
+            border-radius: 6px; padding: 8px 15px;
+            text-align: center; font-size: 0.85rem; color: #8b949e;
         }
-        .btn-primary:hover { background: #3fb950; transform: scale(1.05); }
-        .btn-secondary {
-            background: transparent; color: #2ea043;
-            padding: 12px 28px; border-radius: 8px;
-            text-decoration: none; font-weight: bold;
-            font-size: 1rem; border: 2px solid #2ea043;
-            transition: all 0.3s;
+        .right-panel { flex: 1; display: flex; flex-direction: column; gap: 20px; }
+        .main-result {
+            background: #0d1117; border-radius: 10px; padding: 20px;
+            text-align: center; min-height: 120px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
-        .btn-secondary:hover { background: #2ea04322; }
-
-        /* Stats */
-        .stats {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            padding: 30px 40px;
-            background: #161b22;
-            border-bottom: 1px solid #21262d;
-            flex-wrap: wrap;
+        .waste-icon { font-size: 3.5rem; margin-bottom: 8px; }
+        .waste-type { font-size: 1.8rem; font-weight: bold; color: #2ea043; margin-bottom: 5px; }
+        .confidence { font-size: 0.9rem; color: #8b949e; }
+        .prob-item { margin: 10px 0; }
+        .prob-label { display: flex; justify-content: space-between; font-size: 0.88rem; color: #c9d1d9; margin-bottom: 5px; }
+        .prob-bar-bg { background: #21262d; border-radius: 10px; height: 8px; overflow: hidden; }
+        .prob-bar { height: 100%; border-radius: 10px; transition: width 0.3s ease; }
+        .tip-card p { color: #c9d1d9; font-size: 0.92rem; line-height: 1.6; }
+        .stats-bar {
+            background: #161b22; border-top: 2px solid #2ea043;
+            display: flex; justify-content: space-around;
+            padding: 18px 40px; flex-wrap: wrap; gap: 15px;
         }
         .stat { text-align: center; }
-        .stat-num { font-size: 2rem; font-weight: bold; color: #2ea043; }
-        .stat-label { font-size: 0.8rem; color: #8b949e; margin-top: 4px; }
-
-        /* Features Grid */
-        .features {
-            padding: 50px 40px;
-            max-width: 1300px;
-            margin: 0 auto;
-        }
-        .features h2 {
-            text-align: center;
-            font-size: 1.8rem;
-            color: #2ea043;
-            margin-bottom: 10px;
-        }
-        .features p {
-            text-align: center;
-            color: #8b949e;
-            margin-bottom: 40px;
-        }
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-        }
-        .feature-card {
-            background: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 16px;
-            padding: 30px;
-            text-decoration: none;
-            color: inherit;
-            transition: all 0.3s;
-            display: block;
-        }
-        .feature-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--card-color);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
-        }
-        .feature-icon { font-size: 2.5rem; margin-bottom: 15px; }
-        .feature-tag {
-            font-size: 0.72rem;
-            font-weight: bold;
-            padding: 3px 10px;
-            border-radius: 20px;
-            display: inline-block;
-            margin-bottom: 12px;
-            background: var(--card-color-bg);
-            color: var(--card-color);
-            border: 1px solid var(--card-color);
-        }
-        .feature-card h3 {
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-            color: #e6edf3;
-        }
-        .feature-card p {
-            font-size: 0.9rem;
-            color: #8b949e;
-            line-height: 1.5;
-            text-align: left;
-        }
-        .feature-arrow {
-            margin-top: 20px;
-            color: var(--card-color);
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
-
-        /* How it works */
-        .how {
-            background: #161b22;
-            border-top: 1px solid #21262d;
-            border-bottom: 1px solid #21262d;
-            padding: 50px 40px;
-        }
-        .how h2 {
-            text-align: center;
-            font-size: 1.8rem;
-            color: #2ea043;
-            margin-bottom: 40px;
-        }
-        .flow {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 10px;
-            max-width: 1100px;
-            margin: 0 auto;
-        }
-        .flow-step {
-            background: #0d1117;
-            border: 1px solid #30363d;
-            border-radius: 12px;
-            padding: 20px 15px;
-            text-align: center;
-            min-width: 130px;
-        }
-        .flow-step .icon { font-size: 2rem; margin-bottom: 8px; }
-        .flow-step .label { font-size: 0.85rem; font-weight: bold; color: #2ea043; margin-bottom: 4px; }
-        .flow-step .sub { font-size: 0.75rem; color: #8b949e; }
-        .flow-arrow { font-size: 1.5rem; color: #2ea043; font-weight: bold; }
-
-        /* Tech Stack */
-        .tech {
-            padding: 50px 40px;
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-        .tech h2 {
-            text-align: center;
-            font-size: 1.8rem;
-            color: #2ea043;
-            margin-bottom: 30px;
-        }
-        .tech-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
-        .tech-item {
-            background: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 10px;
-            padding: 15px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .tech-icon { font-size: 1.5rem; }
-        .tech-name { font-size: 0.85rem; font-weight: bold; color: #c9d1d9; }
-        .tech-desc { font-size: 0.75rem; color: #8b949e; }
-
-        /* Footer */
+        .stat-num { display: block; font-size: 1.8rem; font-weight: bold; color: #2ea043; }
+        .stat-label { font-size: 0.78rem; color: #8b949e; margin-top: 3px; }
         .footer {
-            background: #161b22;
-            border-top: 2px solid #2ea043;
-            padding: 25px 40px;
-            text-align: center;
+            background: #161b22; border-top: 1px solid #21262d;
+            text-align: center; padding: 15px; color: #484f58; font-size: 0.8rem;
         }
-        .footer p { color: #8b949e; font-size: 0.85rem; }
-        .footer .green { color: #2ea043; font-weight: bold; }
-
-        /* Sim banner */
-        .sim-banner {
-            background: #2d2a00;
-            border-bottom: 1px solid #9e8c00;
-            color: #e3c84a;
-            text-align: center;
-            padding: 8px;
-            font-size: 0.82rem;
-        }
-
         @media (max-width: 768px) {
-            .hero h2 { font-size: 2rem; }
-            .header { flex-direction: column; gap: 15px; }
-            .features { padding: 30px 20px; }
+            .container { flex-direction: column; padding: 15px; }
+            .header { flex-direction: column; gap: 10px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Header -->
-    <div class="header">
-        <div>
-            <h1>🌱 SwachhAI</h1>
-            <p>Intelligent Solar Cleaning System for Smart Cities</p>
-        </div>
-        <nav class="nav-links">
-            <a href="index.html" class="nav-link">🏠 Home</a>
-            <a href="scanner.html" class="nav-link">📷 Scanner</a>
-            <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
-            <a href="predict.html" class="nav-link">📈 Predictor</a>
-            <a href="chatbot.html" class="nav-link">🤖 ChatBot</a>
-            <a href="flood.html" class="nav-link">🌊 Flood AI</a>
-            <a href="segregate.html" class="nav-link">♻️ Segregator</a>
-        </nav>
+<div class="header">
+    <div>
+        <h1>🌱 SwachhAI — Live Waste Scanner</h1>
+        <p style="color:#8b949e; font-size:0.75rem;">AI Waste Detection | Real-time Classification</p>
     </div>
+    <nav class="nav-links">
+        <a href="index.html" class="nav-link">🏠 Home</a>
+        <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+        <a href="predict.html" class="nav-link">📈 Predictor</a>
+        <a href="chatbot.html" class="nav-link">🤖 ChatBot</a>
+        <a href="flood.html" class="nav-link">🌊 Flood AI</a>
+        <a href="segregate.html" class="nav-link">♻️ Segregator</a>
+    </nav>
+</div>
 
-    <!-- Sim Banner -->
-    <div class="sim-banner">
-        🟡 SwachhAI Prototype — AI for Bharat Hackathon 2026 | Track: Smart Public Transport & Civic Infrastructure
-    </div>
+<div class="sim-banner">
+    🟡 SwachhAI Prototype Mode — AI model trained on waste image dataset. Real deployment will use vehicle-mounted cameras across India's cities.
+</div>
 
-    <!-- Hero -->
-    <div class="hero">
-        <div class="hero-badge">🏆 AI for Bharat Hackathon 2026</div>
-        <h2>🌱 SwachhAI</h2>
-        <p>India's first AI-powered solar waste intelligence system. Real-time waste detection, predictive analytics, multilingual alerts and flood intelligence — making every Indian city smarter and cleaner.</p>
-        <div class="hero-btns">
-            <a href="scanner.html" class="btn-primary">📷 Try Live Scanner</a>
-            <a href="dashboard.html" class="btn-secondary">📊 View Dashboard</a>
-            <a href="chatbot.html" class="btn-secondary">🤖 Talk to SwachhAI</a>
+<div class="container">
+    <!-- Left: Camera -->
+    <div style="flex:1;">
+        <div class="card">
+            <h2>📷 Live Waste Scanner</h2>
+            <p class="subtitle">Point camera at any waste item</p>
+            <div id="webcam-container"></div>
+            <div class="btn-group">
+                <button onclick="init()" id="startBtn" class="btn-green">▶ Start Scanner</button>
+                <button onclick="stopScanner()" id="stopBtn" class="btn-red" disabled>⏹ Stop</button>
+            </div>
+            <div class="status-bar" id="statusText">⏳ Click Start Scanner to begin</div>
         </div>
-    </div>
 
-    <!-- Stats -->
-    <div class="stats">
-        <div class="stat">
-            <div class="stat-num">62MT</div>
-            <div class="stat-label">Annual Indian Waste</div>
-        </div>
-        <div class="stat">
-            <div class="stat-num">4,000+</div>
-            <div class="stat-label">Target Municipalities</div>
-        </div>
-        <div class="stat">
-            <div class="stat-num">40%</div>
-            <div class="stat-label">Cost Reduction</div>
-        </div>
-        <div class="stat">
-            <div class="stat-num">85%+</div>
-            <div class="stat-label">AI Accuracy</div>
-        </div>
-        <div class="stat">
-            <div class="stat-num">Zero</div>
-            <div class="stat-label">Fuel Cost</div>
-        </div>
-        <div class="stat">
-            <div class="stat-num">SDG 11</div>
-            <div class="stat-label">Sustainable Cities</div>
+        <!-- GPS Box -->
+        <div class="card">
+            <h2>📍 GPS Location</h2>
+            <p id="gpsText" style="color:#c9d1d9; font-size:0.9rem;">Fetching location...</p>
         </div>
     </div>
 
-    <!-- Features -->
-    <div class="features">
-        <h2>⚡ 6 AI-Powered Features</h2>
-        <p>Complete waste intelligence system built for India</p>
-
-        <div class="features-grid">
-
-            <a href="scanner.html" class="feature-card"
-               style="--card-color:#2ea043; --card-color-bg:#2ea04322;">
-                <div class="feature-icon">📷</div>
-                <div class="feature-tag">AI VISION</div>
-                <h3>Live Waste Scanner</h3>
-                <p>Real-time AI camera detects and classifies waste into Plastic, Organic, Paper and Metal with 85%+ accuracy. GPS tags every hotspot automatically.</p>
-                <div class="feature-arrow">→ Try Scanner</div>
-            </a>
-
-            <a href="dashboard.html" class="feature-card"
-               style="--card-color:#58a6ff; --card-color-bg:#58a6ff22;">
-                <div class="feature-icon">📊</div>
-                <div class="feature-tag">SMART DASHBOARD</div>
-                <h3>City Waste Intelligence</h3>
-                <p>Live dashboard showing waste hotspots, composition charts, priority lists and AI-optimized cleaning routes for municipal corporations.</p>
-                <div class="feature-arrow">→ View Dashboard</div>
-            </a>
-
-            <a href="predict.html" class="feature-card"
-               style="--card-color:#f97316; --card-color-bg:#f9731622;">
-                <div class="feature-icon">📈</div>
-                <div class="feature-tag">LSTM PREDICTION</div>
-                <h3>Waste Predictor</h3>
-                <p>AI predicts waste generation 24-48 hours in advance based on historical patterns, time of day, weather and local events. Prevents hotspots before they form.</p>
-                <div class="feature-arrow">→ See Predictions</div>
-            </a>
-
-            <a href="chatbot.html" class="feature-card"
-               style="--card-color:#a371f7; --card-color-bg:#a371f722;">
-                <div class="feature-icon">🤖</div>
-                <div class="feature-tag">AI CHATBOT</div>
-                <h3>SwachhAI Assistant</h3>
-                <p>Multilingual AI chatbot in Hindi and English. Citizens report waste, get disposal guidance and track cleaning status. Municipal workers get voice alerts in regional languages.</p>
-                <div class="feature-arrow">→ Chat Now</div>
-            </a>
-
-            <a href="flood.html" class="feature-card"
-               style="--card-color:#ef4444; --card-color-bg:#ef444422;">
-                <div class="feature-icon">🌊</div>
-                <div class="feature-tag">FLOOD INTELLIGENCE</div>
-                <h3>Flood Risk AI</h3>
-                <p>AI cross-references waste hotspots with drainage maps to predict flood-risk zones before monsoon. Critical for Bihar, Assam and coastal cities.</p>
-                <div class="feature-arrow">→ Check Flood Risk</div>
-            </a>
-
-            <a href="segregate.html" class="feature-card"
-               style="--card-color:#eab308; --card-color-bg:#eab30822;">
-                <div class="feature-icon">♻️</div>
-                <div class="feature-tag">COMPUTER VISION</div>
-                <h3>Smart Segregator</h3>
-                <p>Computer vision guided waste segregation system automatically sorts collected waste into dry, wet and hazardous bins using YOLOv8 detection.</p>
-                <div class="feature-arrow">→ Try Segregator</div>
-            </a>
-
-        </div>
-    </div>
-
-    <!-- How it works -->
-    <div class="how">
-        <h2>⚙️ How SwachhAI Works</h2>
-        <div class="flow">
-            <div class="flow-step">
-                <div class="icon">📷</div>
-                <div class="label">Camera</div>
-                <div class="sub">Live video feed from vehicle</div>
-            </div>
-            <div class="flow-arrow">→</div>
-            <div class="flow-step">
-                <div class="icon">🧠</div>
-                <div class="label">AI Classifies</div>
-                <div class="sub">TensorFlow.js model</div>
-            </div>
-            <div class="flow-arrow">→</div>
-            <div class="flow-step">
-                <div class="icon">📍</div>
-                <div class="label">GPS Tags</div>
-                <div class="sub">Location logged</div>
-            </div>
-            <div class="flow-arrow">→</div>
-            <div class="flow-step">
-                <div class="icon">📊</div>
-                <div class="label">Dashboard</div>
-                <div class="sub">PMC alerted instantly</div>
-            </div>
-            <div class="flow-arrow">→</div>
-            <div class="flow-step">
-                <div class="icon">🤖</div>
-                <div class="label">AI Routes</div>
-                <div class="sub">Optimal path planned</div>
-            </div>
-            <div class="flow-arrow">→</div>
-            <div class="flow-step">
-                <div class="icon">☀️</div>
-                <div class="label">Solar Vehicle</div>
-                <div class="sub">Zero emission clean</div>
+    <!-- Right: Results -->
+    <div class="right-panel">
+        <div class="card">
+            <h2>🧠 AI Detection Result</h2>
+            <div class="main-result">
+                <div class="waste-icon" id="wasteIcon">🔍</div>
+                <div class="waste-type" id="wasteType">Waiting for scan...</div>
+                <div class="confidence" id="confidence"></div>
             </div>
         </div>
-    </div>
 
-    <!-- Tech Stack -->
-    <div class="tech">
-        <h2>🛠️ Technology Stack</h2>
-        <div class="tech-grid">
-            <div class="tech-item">
-                <div class="tech-icon">🧠</div>
-                <div>
-                    <div class="tech-name">TensorFlow.js + YOLOv8</div>
-                    <div class="tech-desc">Real-time waste classification</div>
+        <div class="card">
+            <h2>📊 Detection Confidence</h2>
+            <div id="label-container"></div>
+        </div>
+
+        <div class="card tip-card">
+            <h2>💡 Disposal Guidance</h2>
+            <p id="tipText">Start the scanner to get real-time disposal advice</p>
+        </div>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-bar">
+    <div class="stat"><span class="stat-num" id="totalScans">0</span><span class="stat-label">Total Detections</span></div>
+    <div class="stat"><span class="stat-num" id="plasticCount">0</span><span class="stat-label">🧴 Plastic</span></div>
+    <div class="stat"><span class="stat-num" id="organicCount">0</span><span class="stat-label">🍃 Organic</span></div>
+    <div class="stat"><span class="stat-num" id="paperCount">0</span><span class="stat-label">📄 Paper</span></div>
+    <div class="stat"><span class="stat-num" id="metalCount">0</span><span class="stat-label">🔩 Metal</span></div>
+    <div class="stat"><span class="stat-num" id="gpsCoord">--</span><span class="stat-label">📍 GPS Active</span></div>
+</div>
+
+<div class="footer">SwachhAI by Team Eco Visionaries — AI for Bharat Hackathon 2026 | Patna Municipal Corporation — 950 TPD Waste Challenge</div>
+
+<script>
+// ⚠️ YOUR TEACHABLE MACHINE MODEL URL
+const MODEL_URL = "https://teachablemachine.withgoogle.com/models/E9AlpCNSp/";
+
+let model, webcam, maxPredictions;
+let isRunning = false;
+let counts = { total: 0, Plastic: 0, Organic: 0, Paper: 0, Metal: 0 };
+let lastCountTime = 0;
+
+const wasteData = {
+    "Plastic": {
+        icon: "🧴", color: "#2196F3",
+        tip: "♻️ PLASTIC detected! Place in BLUE bin. SwachhAI has GPS-tagged this hotspot for priority plastic collection. Patna generates approx 258 TPD of non-biodegradable waste — plastic is the biggest contributor."
+    },
+    "Organic": {
+        icon: "🍃", color: "#4CAF50",
+        tip: "🌱 ORGANIC waste detected! Place in GREEN bin. Can be composted within 30-45 days. Patna's waste is 47.4% biodegradable (NEERI Study) — composting can significantly reduce landfill load."
+    },
+    "Paper": {
+        icon: "📄", color: "#FFC107",
+        tip: "📦 PAPER waste detected! Place in YELLOW bin for recycling. Recycling 1 tonne of paper saves 17 trees. SwachhAI has flagged this zone for paper recycling pickup route optimization."
+    },
+    "Metal": {
+        icon: "🔩", color: "#f44336",
+        tip: "⚙️ METAL waste detected! Place in RED bin. Metal is 100% recyclable indefinitely. SwachhAI has alerted scrap collection network for this GPS location."
+    }
+};
+
+async function init() {
+    try {
+        document.getElementById("startBtn").disabled = true;
+        document.getElementById("statusText").textContent = "⏳ Loading AI Model... Please wait";
+        document.getElementById("wasteType").textContent = "Loading AI...";
+
+        const modelURL = MODEL_URL + "model.json";
+        const metadataURL = MODEL_URL + "metadata.json";
+
+        model = await tmImage.load(modelURL, metadataURL);
+        maxPredictions = model.getTotalClasses();
+
+        const flip = true;
+        webcam = new tmImage.Webcam(380, 380, flip);
+        await webcam.setup();
+        await webcam.play();
+
+        document.getElementById("webcam-container").innerHTML = "";
+        document.getElementById("webcam-container").appendChild(webcam.canvas);
+        document.getElementById("stopBtn").disabled = false;
+        document.getElementById("statusText").textContent = "✅ Scanner Active — Detecting waste in real-time";
+        document.getElementById("wasteType").textContent = "Scanning...";
+
+        buildBars();
+        getGPS();
+
+        isRunning = true;
+        window.requestAnimationFrame(loop);
+
+    } catch (err) {
+        console.error("Scanner error:", err);
+        document.getElementById("startBtn").disabled = false;
+        document.getElementById("statusText").textContent = "❌ Error loading AI model. Check internet connection.";
+        document.getElementById("wasteType").textContent = "Error — Try again";
+        document.getElementById("wasteIcon").textContent = "❌";
+    }
+}
+
+function buildBars() {
+    const container = document.getElementById("label-container");
+    container.innerHTML = "";
+    const classes = ["Plastic", "Organic", "Paper", "Metal"];
+    const colors = { Plastic: "#2196F3", Organic: "#4CAF50", Paper: "#FFC107", Metal: "#f44336" };
+    const icons  = { Plastic: "🧴", Organic: "🍃", Paper: "📄", Metal: "🔩" };
+
+    classes.forEach((cls, i) => {
+        container.innerHTML += `
+            <div class="prob-item">
+                <div class="prob-label">
+                    <span>${icons[cls]} ${cls}</span>
+                    <span id="pct-${i}">0%</span>
                 </div>
-            </div>
-            <div class="tech-item">
-                <div class="tech-icon">☀️</div>
-                <div>
-                    <div class="tech-name">Solar + LiFePO4</div>
-                    <div class="tech-desc">Zero emission power system</div>
+                <div class="prob-bar-bg">
+                    <div class="prob-bar" id="bar-${i}" style="width:0%; background:${colors[cls]}"></div>
                 </div>
-            </div>
-            <div class="tech-item">
-                <div class="tech-icon">📈</div>
-                <div>
-                    <div class="tech-name">LSTM Neural Network</div>
-                    <div class="tech-desc">Predictive waste analytics</div>
-                </div>
-            </div>
-            <div class="tech-item">
-                <div class="tech-icon">🗣️</div>
-                <div>
-                    <div class="tech-name">Claude AI + NLP</div>
-                    <div class="tech-desc">Hindi/English chatbot</div>
-                </div>
-            </div>
-            <div class="tech-item">
-                <div class="tech-icon">🌊</div>
-                <div>
-                    <div class="tech-name">Flood Intelligence AI</div>
-                    <div class="tech-desc">Drainage + waste mapping</div>
-                </div>
-            </div>
-            <div class="tech-item">
-                <div class="tech-icon">🚗</div>
-                <div>
-                    <div class="tech-name">BLDC + Arduino Mega</div>
-                    <div class="tech-desc">Autonomous vehicle control</div>
-                </div>
-            </div>
-        </div>
-    </div>
+            </div>`;
+    });
+}
 
-    <!-- Footer -->
-    <div class="footer">
-        <p><span class="green">SwachhAI</span> by Team Eco Visionaries | Ayush Anurag | AI for Bharat Hackathon 2026</p>
-        <p style="margin-top:8px;">Track: Smart Public Transport & Civic Infrastructure | GitHub: ayushrajputt64/SwachhAI</p>
-    </div>
+async function loop() {
+    if (!isRunning) return;
+    webcam.update();
+    await predict();
+    window.requestAnimationFrame(loop);
+}
 
+async function predict() {
+    const prediction = await model.predict(webcam.canvas);
+    let maxProb = 0, maxClass = "";
+
+    prediction.forEach((pred, i) => {
+        const pct = (pred.probability * 100).toFixed(1);
+        const bar = document.getElementById(`bar-${i}`);
+        const pctEl = document.getElementById(`pct-${i}`);
+        if (bar) bar.style.width = pct + "%";
+        if (pctEl) pctEl.textContent = pct + "%";
+        if (pred.probability > maxProb) {
+            maxProb = pred.probability;
+            maxClass = pred.className;
+        }
+    });
+
+    if (maxProb > 0.70 && wasteData[maxClass]) {
+        const data = wasteData[maxClass];
+        document.getElementById("wasteIcon").textContent = data.icon;
+        document.getElementById("wasteType").textContent = maxClass + " Waste";
+        document.getElementById("wasteType").style.color = data.color;
+        document.getElementById("confidence").textContent = `Confidence: ${(maxProb * 100).toFixed(1)}%`;
+        document.getElementById("tipText").textContent = data.tip;
+
+        const now = Date.now();
+        if (now - lastCountTime > 3000) {
+            counts.total++;
+            counts[maxClass] = (counts[maxClass] || 0) + 1;
+            updateStats();
+            lastCountTime = now;
+        }
+    }
+}
+
+function updateStats() {
+    document.getElementById("totalScans").textContent = counts.total;
+    document.getElementById("plasticCount").textContent = counts.Plastic || 0;
+    document.getElementById("organicCount").textContent = counts.Organic || 0;
+    document.getElementById("paperCount").textContent  = counts.Paper   || 0;
+    document.getElementById("metalCount").textContent  = counts.Metal   || 0;
+}
+
+function stopScanner() {
+    isRunning = false;
+    if (webcam) webcam.stop();
+    document.getElementById("startBtn").disabled = false;
+    document.getElementById("stopBtn").disabled = true;
+    document.getElementById("statusText").textContent = "⏹ Scanner stopped";
+    document.getElementById("wasteType").textContent = "Stopped";
+    document.getElementById("wasteIcon").textContent = "⏹";
+    document.getElementById("confidence").textContent = "";
+}
+
+function getGPS() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const lat = pos.coords.latitude.toFixed(4);
+                const lng = pos.coords.longitude.toFixed(4);
+                document.getElementById("gpsCoord").textContent = `${lat},${lng}`;
+                document.getElementById("gpsText").textContent =
+                    `📍 Lat: ${lat}, Lng: ${lng} — Waste location logged to SwachhAI database`;
+            },
+            () => {
+                document.getElementById("gpsCoord").textContent = "25.5941,85.1376";
+                document.getElementById("gpsText").textContent =
+                    "📍 Lat: 25.5941, Lng: 85.1376 — Patna, Bihar (Default location)";
+            }
+        );
+    }
+}
+</script>
 </body>
 </html>
